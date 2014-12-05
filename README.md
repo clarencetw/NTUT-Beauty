@@ -1,8 +1,8 @@
 NTUT-Beauty
 ===========
 
-NTUT Beauty http://ntutbeauty.clarence.tw
+NTUT Beauty http://ntutcourse.ts3.tw/facebook/beauty/
 
-如需登入功能請到 config/appid.php 修改成你的 appID & secret
-
-index.php getFeed.php getFeedInfo.php 均需修改成你要顯示 Pages 的 ID
+如需登入功能請到 include/function
+修改你的 appID & secret
+與需要顯示的 Pages ID

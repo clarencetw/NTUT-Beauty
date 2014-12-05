@@ -1,25 +1,20 @@
 <?php
-require_once('facebook.php');
-include_once('config/analyticstracking.php');
-require_once('config/appid.php');
+require('include/function.php');
 
-$facebook = new Facebook($config);
+//get User Info
+$facebook = getFB();
 $user = $facebook->getUser();
-if ($user) {
-  try {
-    $userProfile = $facebook->api('/me');
-  } catch (FacebookApiException $e) {
-    $user = null;
-  }
-}
-if ($user) {
-  $logoutUrl = $facebook->getLogoutUrl(array(
-      'redirect_uri' => ''
-    ));
-} else {
-  $loginUrl = $facebook->getLoginUrl(array(
-      'redirect_uri' => ''
-    ));
+$loginUrl = $facebook->getLoginUrl();
+
+if($user) {
+	try {
+		$userProfile = $facebook->api('/me','GET');
+		$logoutUrl = $facebook->getLogoutUrl();
+	} catch(FacebookApiException $e) {
+		$login_url = $facebook->getLoginUrl(); 
+	}
+}else{
+	$login_url = $facebook->getLoginUrl();
 }
 ?>
 <!DOCTYPE html>
@@ -35,12 +30,8 @@ if ($user) {
     <meta property="og:url" content="http://ntutbeauty.clarence.tw/"/>
 
     <title>北科表特</title>
-
-    <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="default.css" rel="stylesheet">
+    <link href="css/default.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -50,7 +41,6 @@ if ($user) {
   </head>
 
   <body>
-
     <div class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -65,11 +55,11 @@ if ($user) {
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
             <li>
-  <?php if ($user): ?>
-                <a><?php echo $userProfile['name']; ?></a>
-  <?php else: ?>
-                <a href="<?php echo $loginUrl; ?>">登入</a>
-  <?php endif ?>
+			  <?php if ($user): ?>
+				<a href='<?php echo $logoutUrl?>'><?php echo $userProfile['name']; ?></a>
+			  <?php else: ?>
+				<a href="<?php echo $loginUrl; ?>">登入</a>
+			  <?php endif ?>
             </li>
           </ul>
         </div>
@@ -82,7 +72,7 @@ if ($user) {
       </div>
     </div>
     <div class="container" id="container">
-      <button type="button" id="loading-btn" data-loading-text="Loading..." class="btn btn-default btn-lg btn-block" onclick="location='<?php echo $loginUrl; ?>';">因 Facebook 關係 請登入</button>
+      <button type="button" id="loading-btn" data-loading-text="Loading..." class="btn btn-default btn-lg btn-block" onclick="location='<?php echo $loginUrl; ?>';">請登入 Facebook 已檢視</button>
     </div>
     <div class="container">
       <hr>
@@ -91,57 +81,39 @@ if ($user) {
     </div>
 
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', '{your ga id}', 'auto'); //可以修改成你的 GA
+	  ga('require', 'displayfeatures');
+	  ga('send', 'pageview');
+	</script>
+    <script src="js/jquery-2.0.3.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/masonry.pkgd.min.js"></script>
     <script src="js/imagesloaded.pkgd.min.js"></script>
     <script type="text/javascript">
-      $.ajax({
-        url: 'getFeed.php',
-        error: function(xhr) {
-          console.log('Ajax request 發生錯誤');
-        },
-        success: function(response) {
-          $('#container').html(response);
-        },
-        complete: function(){
-          var container = document.querySelector('#row');
-          var msnry;
-          imagesLoaded( container, function() {
-            msnry = new Masonry( container, {
-              columnWidth: 5,
-              isAnimated: true,
-              itemSelector: '.col-sm-6'
-            });
-          });
-          messageClick();
-        }
-      });
-      $('#loading-btn').button('loading');
-      function messageClick(){
-        $('button[name=comment]').click(function() {
-          console.log(this.value);
-          console.log(this.name);
-            $.ajax({
-              type: "GET",
-              url: 'getFeedInfo.php',
-              data: { id : this.value },
-              dataType: "html",
-              error: function(xhr) {
-                console.log('Ajax request 發生錯誤');
-              },
-              success: function(response) {
-                $('#feedMessage').html(response);
-              },
-              complete: function(){
-
-              }
-            });
-        });
-      }
+     $(function(){
+		 $('#loading-btn').button('loading');
+		 $("#container").load('getFeed.php',function(){
+			var container = $('#row')[0];
+			var msnry;
+			imagesLoaded( container, function() {
+				msnry = new Masonry( container, {
+				  columnWidth: 5,
+				  isAnimated: true,
+				  itemSelector: '.col-sm-6'
+				});
+			});
+		 }).on('click', 'button[name=comment]', function(){
+			$.get('getFeedInfo.php',{id: $(this).val()},function(response){
+				$('#feedMessage').html(response);
+			});			
+         });
+	 });
     </script>
   </body>
 </html>
